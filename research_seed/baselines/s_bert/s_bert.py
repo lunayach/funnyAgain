@@ -1,31 +1,61 @@
-"""
-This file defines the core research contribution   
-"""
 import os
 import torch
 from torch.nn import functional as F
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
 from torchvision.datasets import MNIST
 import torchvision.transforms as transforms
 from argparse import ArgumentParser
+import h5py
 
 import pytorch_lightning as pl
 
+class S_bert_not_finetuend_Data(Dataset):
 
-class CoolSystem(pl.LightningModule):
+      def __init__(self, train=True):
+            super(S_bert_not_finetuend_Data, self).__init__()
+            self.train = train
+            self.split = 'train'
+
+            if self.train:
+                  data_file = 'research_seed/data/s_bert_not_finetuned_TRAIN.hdf5'
+            else:
+                  data_file = 'research_seed/data/s_bert_not_finetuned_DEV.hdf5'
+                  self.split = 'val'
+
+            self.data = h5py.File(data_file, "r")
+
+      def __getitem__(self, index):
+
+            dp = self.data[self.split][str(index)]
+            if self.train:
+                  return dp['ID'], dp['Embedding'], dp['Score']
+            else:
+                  return dp['ID'], dp['Embedding']
+
+      def __len__(self):
+            #todo remove this hardcoding!!
+            if self.train:
+                  return 9652
+            else:
+                  return 2419
+
+
+class S_BERT_Regression(pl.LightningModule):
 
     def __init__(self, hparams):
-        super(CoolSystem, self).__init__()
+        super(S_BERT_Regression, self).__init__()
         # not the best model...
         self.hparams = hparams
-        self.l1 = torch.nn.Linear(28 * 28, 10)
+        self.l1 = torch.nn.Linear(768, 256)
+        self.l2 = torch.nn.Linear(256, 10)
+
 
     def forward(self, x):
         return torch.relu(self.l1(x.view(x.size(0), -1)))
 
     def training_step(self, batch, batch_idx):
         # REQUIRED
-        x, y = batch
+        id, x, y = batch
         y_hat = self.forward(x)
         return {'loss': F.cross_entropy(y_hat, y)}
 
@@ -48,17 +78,12 @@ class CoolSystem(pl.LightningModule):
     @pl.data_loader
     def train_dataloader(self):
         # REQUIRED
-        return DataLoader(MNIST(os.getcwd(), train=True, download=True, transform=transforms.ToTensor()), batch_size=self.hparams.batch_size)
+        return DataLoader(S_bert_not_finetuend_Data(train=True), batch_size=self.hparams.batch_size)
 
     @pl.data_loader
     def val_dataloader(self):
         # OPTIONAL
-        return DataLoader(MNIST(os.getcwd(), train=True, download=True, transform=transforms.ToTensor()), batch_size=self.hparams.batch_size)
-
-    @pl.data_loader
-    def test_dataloader(self):
-        # OPTIONAL
-        return DataLoader(MNIST(os.getcwd(), train=True, download=True, transform=transforms.ToTensor()), batch_size=self.hparams.batch_size)
+        return DataLoader(S_bert_not_finetuend_Data(train=False), batch_size=self.hparams.batch_size)
 
     @staticmethod
     def add_model_specific_args(parent_parser):

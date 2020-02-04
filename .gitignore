@@ -9,6 +9,10 @@ __pycache__/
 # Model file
 *.ckpt
 
+# Submission files
+*.csv
+*.zip
+
 # Logs folder
 lightning_logs/
 

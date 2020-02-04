@@ -6,6 +6,12 @@ __pycache__/
 # C extensions
 *.so
 
+# Model file
+*.ckpt
+
+# Logs folder
+lightning_logs/
+
 # Distribution / packaging
 .Python
 build/

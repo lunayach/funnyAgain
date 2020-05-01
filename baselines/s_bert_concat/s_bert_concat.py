@@ -14,22 +14,29 @@ class S_BERT_Regression(pl.LightningModule):
         super(S_BERT_Regression, self).__init__()
         # not the best model...
         self.hparams = hparams
-        self.l1 = torch.nn.Linear(768, 256)
-        self.l2 = torch.nn.Linear(256, 1)
+        self.l1 = torch.nn.Linear(768 * 3, 768)
+        self.l2 = torch.nn.Linear(768, 256)
+        self.l3 = torch.nn.Linear(256, 1)
+        self.dropout = torch.nn.Dropout(p=0.2)
 
     def forward(self, x):
-        f1 = torch.relu(self.l1(x.view(x.size(0), -1)))
-        out = self.l2(f1)
+        f1 = self.dropout(torch.relu(self.l1(x.view(x.size(0), -1))))
+        f2 = torch.relu(self.l2(f1))
+        out = self.l3(f2)
 
         return out
 
     def training_step(self, batch, batch_idx):
-        id, x, y = batch
+        id, edited, unedited, y = batch
+        difference = edited - unedited
+        x = torch.cat((edited, unedited, difference), 1)
         y_hat = self.forward(x)
         return {'loss': F.mse_loss(y_hat.squeeze(), y)}
 
     def validation_step(self, batch, batch_idx):
-        id, x, y = batch
+        id, edited, unedited, y = batch
+        difference = edited - unedited
+        x = torch.cat((edited, unedited, difference), 1)
         y_hat = self.forward(x)
         return {'val_loss': F.mse_loss(y_hat.squeeze(), y)}
 
@@ -38,7 +45,9 @@ class S_BERT_Regression(pl.LightningModule):
         return {'avg_val_loss': avg_loss}
 
     def test_step(self, batch, batch_idx):
-        id, x = batch
+        id, edited, unedited = batch
+        difference = edited - unedited
+        x = torch.cat((edited, unedited, difference), 1)
         y_hat = self.forward(x)
         return {'pred': y_hat, 'id': id}
 
@@ -68,13 +77,11 @@ class S_BERT_Regression(pl.LightningModule):
 
     @pl.data_loader
     def val_dataloader(self):
-        # OPTIONAL
-        # TODO explicitly added train=True for the val part
-        return DataLoader(S_bert_not_finetuend_Data(train=True), batch_size=self.hparams.batch_size)
+        return DataLoader(S_bert_not_finetuend_Data(val=True), batch_size=self.hparams.batch_size)
 
     @pl.data_loader
     def test_dataloader(self):
-        return DataLoader(S_bert_not_finetuend_Data(train=False), batch_size=self.hparams.batch_size)
+        return DataLoader(S_bert_not_finetuend_Data(test=True), batch_size=self.hparams.batch_size)
 
     @staticmethod
     def add_model_specific_args(parent_parser):
@@ -94,13 +101,18 @@ class S_BERT_Regression(pl.LightningModule):
 
 class S_bert_not_finetuend_Data(Dataset):
 
-    def __init__(self, train=True):
+    def __init__(self, train=False, val=False, test=False):
         super(S_bert_not_finetuend_Data, self).__init__()
         self.train = train
+        self.val = val
+        self.test = test
+
         self.split = 'train'
 
-        if self.train:
-            data_file = '../../data/s_bert_not_finetuned_TRAIN.hdf5'
+        if self.train or self.val:
+            data_file = '../../data/s_bert_not_finetuned_TRAIN_VAL_CONCAT.hdf5'
+            if self.val:
+                self.split = 'val'
         else:
             data_file = '../../data/s_bert_not_finetuned_DEV.hdf5'
             self.split = 'val'
@@ -110,15 +122,16 @@ class S_bert_not_finetuend_Data(Dataset):
     def __getitem__(self, index):
 
         dp = self.data[self.split][str(index)]
-
-        if self.train:
-            return int(np.array(dp['ID'])), np.array(dp['Embedding']), np.array(dp['Score'])
-        else:
-            return int(np.array(dp['ID'])), np.array(dp['Embedding'])
+        if self.train or self.val:
+            return int(np.array(dp['ID'])), np.array(dp['Embedding']), np.array(dp['Unedited']), np.array(dp['Score'])
+        elif self.test:
+            return int(np.array(dp['ID'])), np.array(dp['Embedding']), np.array(dp['Unedited'])
 
     def __len__(self):
         # todo remove this hardcoding!!
         if self.train:
-            return 9652
-        else:
+            return 8493
+        elif self.val:
+            return 1159
+        elif self.test:
             return 2419

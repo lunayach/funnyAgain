@@ -1,72 +1,29 @@
-### pytorch-lightning-conference-seed
-Use this seed to refactor your PyTorch research code for:  
-- a paper submission  
-- a new research project.     
+# Make headlines funny again   
 
-[Read the usage instructions here](https://github.com/williamFalcon/pytorch-lightning-conference-seed/blob/master/HOWTO.md)
-
-#### Goals  
-The goal of this seed is to structure ML paper-code the same so that work can easily be extended and replicated.   
-
-###### DELETE EVERYTHING ABOVE FOR YOUR PROJECT   
----   
-<div align="center">    
- 
-# Your Project Name     
-
-[![Paper](http://img.shields.io/badge/paper-arxiv.1001.2234-B31B1B.svg)](https://www.nature.com/articles/nature14539)
-[![Conference](http://img.shields.io/badge/NeurIPS-2019-4b44ce.svg)](https://papers.nips.cc/book/advances-in-neural-information-processing-systems-31-2018)
-[![Conference](http://img.shields.io/badge/ICLR-2019-4b44ce.svg)](https://papers.nips.cc/book/advances-in-neural-information-processing-systems-31-2018)
-[![Conference](http://img.shields.io/badge/AnyConference-year-4b44ce.svg)](https://papers.nips.cc/book/advances-in-neural-information-processing-systems-31-2018)  
-<!--
-ARXIV   
-[![Paper](http://img.shields.io/badge/arxiv-math.co:1480.1111-B31B1B.svg)](https://www.nature.com/articles/nature14539)
--->
-
-
-
-<!--  
-Conference   
--->   
-</div>
- 
 ## Description   
-What it does   
+Understanding and predicting humor is a semantically challenging task. In a quest to
+make AI agents more human-like, it becomes essential that they understand the complex social and psychological trait of humor coming very naturally to us. Although some work has been done on proposing methods and datasets for the task, very little work has been done on understanding what makes something funny. A recent work aimed at the same, has recently proposed the Humicroedit (Hossain et al.) dataset, which contains edited news headlines graded for funniness, as a step to identify causes of humor. In our work, we solve for the task of regressing funniness and predicting the funnier edited headline by leveraging the recently proposed powerful LM’s and humor heuristics-based features.   
 
 ## How to run   
-First, install dependencies   
+ 
 ```bash
 # clone project   
-git clone https://github.com/YourGithubName/Your-project-name   
+git clone https://github.com/lunayach/funnyAgain.git   
 
-# install project   
-cd Your-project-name 
-pip install -e .   
-pip install -r requirements.txt
+# move to project folder
+cd funnyAgain 
+
  ```   
- Next, navigate to [Your Main Contribution (MNIST here)] and run it.   
+ Next, navigate to [baselines/] and run the experiments.   
  ```bash
+ Example,
 # module folder
-cd research_seed/mnist/   
+cd baselines/roberta_cached_features 
 
-# run module (example: mnist as your main contribution)   
-python mnist_trainer.py    
+# run module 
+python s_bert_trainer.py    
 ```
+## References (for Code)
+* https://github.com/PyTorchLightning/pytorch-lightning
+* https://huggingface.co/transformers/
 
-## Main Contribution      
-List your modules here. Each module contains all code for a full system including how to run instructions.   
-- [MNIST](https://github.com/williamFalcon/pytorch-lightning-conference-seed/tree/master/research_seed/mnist)  
-
-## Baselines    
-List your baselines here.   
-- [MNIST_baseline](https://github.com/williamFalcon/pytorch-lightning-conference-seed/tree/master/research_seed/baselines/mnist_baseline)  
-
-### Citation   
-```
-@article{YourName,
-  title={Your Title},
-  author={Your team},
-  journal={Location},
-  year={Year}
-}
-```   
